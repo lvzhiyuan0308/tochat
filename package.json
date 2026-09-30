@@ -1,0 +1,21 @@
+{
+  "name": "tochat",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node desktop/src/main.js",
+    "test": "node --test tests/*.test.js",
+    "test:tox": "node tests/tox-e2e.js",
+    "build:native": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/build-native.ps1",
+    "build:android": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/build-android.ps1"
+  },
+  "dependencies": {
+    "jsqr": "1.4.0",
+    "koffi": "2.14.1",
+    "qrcode-generator": "1.4.4"
+  }
+}

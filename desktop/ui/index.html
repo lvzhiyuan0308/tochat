@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>ToChat · 自己的连接</title><link rel="stylesheet" href="style.css"><script src="qrcode.js" defer></script><script src="jsQR.js" defer></script><script src="app.js" defer></script></head>
+<body>
+<div class="workspace">
+  <aside class="sidebar" aria-label="联系人">
+    <header class="brand"><div class="brandmark" aria-hidden="true"><i></i><i></i></div><div><h1>ToChat</h1><span>自己的连接</span></div><button id="identity" class="icon-button" aria-label="我的身份与设置">⚙</button></header>
+    <div class="node-status"><span id="self-dot" class="dot"></span><div><strong id="self-name">正在启动</strong><span id="self-status">连接 Tox 网络…</span></div><span class="p2p">P2P</span></div>
+    <div class="contact-heading"><h2>联系人</h2><button id="add" aria-label="添加联系人" class="icon-button">＋</button></div>
+    <label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="搜索联系人" aria-label="搜索联系人"></label>
+    <div id="requests"></div><nav id="contacts" aria-label="联系人列表"></nav>
+    <footer class="sidebar-foot"><span class="lock-icon" aria-hidden="true">◇</span><div>Tox 端到端加密<span id="outbox-count">历史保存在此设备</span></div><span class="version">0.1</span></footer>
+  </aside>
+  <main class="chat">
+    <header class="chat-header"><button id="back" class="icon-button" aria-label="返回联系人">‹</button><div class="avatar" id="peer-avatar">T</div><div class="peer-heading"><h2 id="peer-name">连接你的人与设备</h2><p id="peer-status">每台设备，一个独立身份</p></div><button id="peer-details" class="quiet" hidden>联系人设置</button></header>
+    <div id="notice" class="notice" role="status" hidden></div>
+    <section id="messages" class="messages" aria-label="聊天记录" aria-live="polite">
+      <div class="welcome"><div class="network-emblem" aria-hidden="true"><span></span><span></span><span></span><i></i><i></i></div><p class="eyebrow">PEOPLE · DEVICES · PERSONAL AI</p><h2>让连接，回到你手里。</h2><p>和朋友聊天，与自己的设备对话。<br>添加一个 Tox 联系人，开始你的第一段连接。</p><button id="welcome-add" class="primary">添加联系人 <span aria-hidden="true">↗</span></button><div class="welcome-details"><span>独立身份</span><span>本地历史</span><span>离线待发</span></div></div>
+    </section>
+    <section id="transfers" class="transfers" aria-label="文件传输"></section>
+    <form id="composer" class="composer" hidden><div class="compose-toolbar"><button id="attach" type="button" class="quiet">＋ 文件</button><label class="ai-toggle"><input id="ai-mode" type="checkbox">向此设备的 AI 提问</label><span id="compose-hint">Enter 发送 · Shift + Enter 换行</span></div><label for="message" class="sr-only">消息</label><textarea id="message" rows="2" placeholder="写下消息…" maxlength="16000"></textarea><div class="compose-bottom"><span id="queue-hint">消息直接发给对方</span><button id="send" type="submit" class="primary">发送 <span aria-hidden="true">↗</span></button></div></form>
+  </main>
+</div>
+<dialog id="add-dialog"><form id="add-form"><div class="dialog-heading"><h2>添加联系人</h2><button type="button" data-close class="icon-button" aria-label="关闭">×</button></div><p>粘贴对方的 Tox ID，或读取二维码图片。</p><label for="tox-address">对方的 Tox ID</label><textarea id="tox-address" rows="3" required placeholder="76 位 Tox ID，或 tox: 链接" spellcheck="false"></textarea><label for="contact-name">备注名称 <span class="muted">（可选）</span></label><input id="contact-name" placeholder="例如：家里的 AI 电脑" maxlength="60"><div id="add-error" class="form-error" role="alert"></div><div class="dialog-actions"><button id="scan" type="button" class="secondary">读取二维码</button><button type="submit" class="primary">发送好友请求</button></div></form></dialog>
+<dialog id="identity-dialog"><div class="dialog-heading"><h2>我的身份</h2><button data-close class="icon-button" aria-label="关闭">×</button></div><p>每台设备拥有独立身份。让对方扫描二维码，或复制 ID 添加你。</p><div id="qr" class="qr"></div><code id="my-address"></code><button id="copy-id" class="secondary full">复制 Tox ID</button><form id="name-form"><label for="device-name">设备名称</label><div class="inline-form"><input id="device-name" maxlength="60" required><button class="secondary">保存</button></div></form><div class="setting-info"><strong>本地 AI</strong><span id="ai-config-info"></span></div><div id="android-mode" hidden><label class="mode-switch"><input id="realtime" type="checkbox">实时模式（通知栏保持在线）</label><p class="muted">省电模式下，关闭界面后节点离线。收到消息需要双方同时在线。</p></div><p class="privacy-note">身份文件已加密。聊天历史保存在当前设备，离线消息会在对方上线后重试发送。</p></dialog>
+<dialog id="peer-dialog"><div class="dialog-heading"><h2>联系人设置</h2><button data-close class="icon-button" aria-label="关闭">×</button></div><p id="peer-id" class="peer-id"></p><div id="ai-permission" hidden><label class="mode-switch"><input id="allow-ai" type="checkbox">允许此联系人使用我的本地 AI</label><p class="muted">仅开放聊天回答。模型使用和 token 消耗发生在此设备。</p></div><p class="privacy-note">UDP / TCP 为 Tox 返回的连接类型。不会据此判断具体 IPv4 / IPv6 路径。</p></dialog>
+<input type="file" id="file-picker" hidden><input type="file" id="qr-picker" accept="image/*" hidden><div id="toast" class="toast" role="status" hidden></div>
+</body></html>

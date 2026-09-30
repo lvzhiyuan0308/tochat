@@ -1,0 +1,6 @@
+[submodule "vendor/c-toxcore"]
+	path = vendor/c-toxcore
+	url = https://github.com/TokTok/c-toxcore.git
+[submodule "vendor/libsodium-cmake"]
+	path = vendor/libsodium-cmake
+	url = https://github.com/robinlinden/libsodium-cmake.git

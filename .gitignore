@@ -1,0 +1,15 @@
+node_modules/
+toolchain/
+build/
+dist/
+data/
+*.log
+*.tmp
+.gradle/
+.kotlin/
+.cxx/
+mobile/android/app/src/main/assets/*
+local.properties
+share-page.html
+share-data.json
+share-plan.txt
