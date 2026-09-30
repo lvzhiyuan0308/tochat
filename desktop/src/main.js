@@ -10,6 +10,7 @@ import { profileKey } from './profile-key.js';
 import { Store } from '../../shared/storage.js';
 import { Engine } from './engine.js';
 import { modelFromSaved, prepareModel, publicModel, protectSecret } from './model-settings.js';
+import { createFileSaver } from './save-file.js';
 const root=fileURLToPath(new URL('../../',import.meta.url));
 const data=path.resolve(process.env.TOCHAT_DATA||path.join(root,'data/windows'));
 mkdirSync(data,{recursive:true});mkdirSync(path.join(data,'downloads'),{recursive:true});mkdirSync(path.join(data,'uploads'),{recursive:true});
@@ -30,6 +31,7 @@ let engine;
 try{engine=new Engine(new ToxNode({profile:path.join(data,'identity.tox'),password:profileKey(path.join(data,'identity.key')),name,udp:process.env.TOCHAT_TCP_ONLY!=='1'}),new Store(path.join(data,'history.sqlite')),{name,downloads:path.join(data,'downloads'),llm,bootstrap});}
 catch(e){console.error('ToChat 启动失败：'+e.message);console.error('首次运行请先执行 npm run build:native。');process.exit(1);}
 const timer=setInterval(()=>{try{engine.tick();}catch(e){engine.error(e);}},100);
+const saveFile=createFileSaver(engine.store,path.join(data,'downloads'));
 const token=randomBytes(32).toString('hex');
 const eq=(a,b)=>typeof a==='string'&&a.length===b.length&&timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml'};
@@ -48,7 +50,8 @@ const server=http.createServer(async(req,res)=>{
       let raw='';for await(const chunk of req){raw+=chunk;if(Buffer.byteLength(raw)>100000)throw new Error('Request too large');}
       const c=JSON.parse(raw);if(['sendFile'].includes(c.op))throw new Error('Use the file picker');
       let r;
-      if(c.op==='modelSettings')r=publicModel(config.llm,engine.llm);
+      if(c.op==='saveFile')r=await saveFile(c);
+      else if(c.op==='modelSettings')r=publicModel(config.llm,engine.llm);
       else if(c.op==='saveModel'){
         const previous=config.llm||{protectedKey:engine.llm?.key?protectSecret(engine.llm.key):''};
         const saved=prepareModel(c,previous);const nextLLM=modelFromSaved(saved);
