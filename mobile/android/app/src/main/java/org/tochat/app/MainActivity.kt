@@ -74,7 +74,7 @@ class MainActivity : Activity() {
                 "pickFile"->{filePeer=c.getString("peer");runOnUiThread{picking=true;startActivityForResult(Intent(Intent.ACTION_GET_CONTENT).setType("*/*").addCategory(Intent.CATEGORY_OPENABLE),12)};return "{\"ok\":true}"}
                 "saveFile"->{val t=(ToxService.runtime?:error("节点未启动")).request(JSONObject(c.toString()).put("op","filePath"));exportPath=t.getString("path");runOnUiThread{picking=true;startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).setType("application/octet-stream").addCategory(Intent.CATEGORY_OPENABLE).putExtra(Intent.EXTRA_TITLE,t.getString("name")),13)};return "{\"ok\":true}"}
             }
-            check(c.getString("op") in listOf("snapshot","add","accept","reject","name","chat","agent.request","acceptFile","cancelFile")){"Unknown UI operation"}
+            check(c.getString("op") in listOf("snapshot","add","accept","reject","name","chat","agent.request","newAISession","cancelAI","acceptFile","cancelFile","retryFile","hideTransfer","restoreTransfer")){"Unknown UI operation"}
             return (ToxService.runtime?:error("正在启动节点，请稍候")).request(c).toString()
         }catch(e:Exception){return JSONObject().put("error",e.cause?.message?:e.message?:"节点错误").toString()}}
     }

@@ -1,8 +1,8 @@
-# ToChat 1.1.0
+# ToChat 1.1.2
 
 **P2P chat for people, devices and personal AI.**
 
-按 [分享方案](https://chatgpt.com/share/6abc623a-4dec-83ea-8fbc-010fa85de513) 实现的独立 Tox 原生 Windows / Android 应用。当前版本为 1.1.0；Windows 本地和公共 TCP 中继已自动验收，Android APK 已构建，跨端真机网络矩阵待验收。
+按 [分享方案](https://chatgpt.com/share/6abc623a-4dec-83ea-8fbc-010fa85de513) 实现的独立 Tox 原生 Windows / Android 应用。当前版本为 1.1.2；Windows 本地和公共 TCP 中继已自动验收，Android APK 已构建，跨端真机网络矩阵待验收。
 
 ## 直接运行
 
@@ -10,11 +10,11 @@
 
 双击根目录 `Start-ToChat.cmd`。使用已有 Node 22；便携包则自带 Node。会打开本机聊天界面。终端持续运行即节点在线，关闭终端则离线。
 
-已打包 `dist/ToChat-1.1.0-windows.zip`，解压后双击其中的 `Start-ToChat.cmd`。无需安装 JDK、Android SDK 或 C/C++ 编译器。
+已打包 `dist/ToChat-1.1.2-windows.zip`，解压后双击其中的 `Start-ToChat.cmd`。无需安装 JDK、Android SDK 或 C/C++ 编译器。
 
 ### Android
 
-安装 `dist/android/ToChat-1.1.0-debug.apk`（签名 Debug 包，可直接安装，Android 8.0+，ARM64/x86_64）。`release-unsigned.apk` 是未签名发布产物，不能直接安装。
+安装 `dist/android/ToChat-1.1.2-debug.apk`（签名 Debug 包，可直接安装，Android 8.0+，ARM64/x86_64）。`release-unsigned.apk` 是未签名发布产物，不能直接安装。
 
 1. 两端点击“我的身份”，分享二维码或 Tox ID。
 2. 另一端点击“添加联系人”，粘贴 ID，或选择二维码图片读取。

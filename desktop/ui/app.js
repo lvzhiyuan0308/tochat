@@ -95,7 +95,7 @@ $('chat-mode').onclick=()=>{$('ai-mode').checked=false;modes.set(selected,false)
 $('assistant-mode').onclick=()=>{$('ai-mode').checked=true;modes.set(selected,true);state&&render();};
 $('new-session').onclick=async()=>{try{await action({op:'newAISession',peer:selected});await refresh();toast('已开始新的 AI 对话，旧聊天记录仍保留');}catch(e){toast(e.message);}};
 $('stop-ai').onclick=async()=>{if(!activeAI)return;$('stop-ai').disabled=true;try{const r=await action({op:'cancelAI',peer:selected,id:activeAI.id});await refresh();toast(r.local?'已取消排队，此问题不会发送':state.peers.find(p=>p.peer===selected)?.connection?'已请求停止':'停止请求已排队，上线后生效');}catch(e){toast(e.message);}finally{state&&render();}};
-function resizeInput(){const input=$('message');input.style.height='auto';input.style.height=Math.min(120,Math.max(48,input.scrollHeight))+'px';}
+function resizeInput(){const input=$('message');input.style.height='auto';const minimum=parseFloat(getComputedStyle(input).minHeight)||48;input.style.height=Math.min(120,Math.max(minimum,input.scrollHeight))+'px';}
 $('message').oninput=resizeInput;
 for(const b of document.querySelectorAll('[data-close]'))b.onclick=()=>b.closest('dialog').close();
 for(const d of document.querySelectorAll('dialog'))d.addEventListener('click',e=>{const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();});

@@ -7,3 +7,19 @@ dialog{color:var(--ink);width:min(440px,calc(100% - 32px));border:1px solid var(
 .field-hint{font-size:11px;line-height:1.6;margin:6px 0 0}#model-dialog .dialog-actions{justify-content:flex-end}
 
 .toast{display:flex;align-items:center;gap:12px}.toast .secondary{flex-shrink:0;min-height:36px}@media(max-width:600px){.composer{margin:0 10px max(10px,env(safe-area-inset-bottom));padding:6px 8px}.compose-toolbar{gap:4px;min-height:48px}.mode-tabs button{min-height:40px;font-size:13px;padding:0 10px}.compose-toolbar .quiet{min-height:48px;padding:0 8px;font-size:12px}.message-tools .quiet,.file-actions button{min-height:48px}.compose-input{gap:4px}.compose-input .icon-button{width:40px}.latest{right:12px;bottom:12px;min-height:48px}.file-card{width:min(90%,400px)}.file-card summary{padding:12px;gap:10px}.bubble{font-size:16px}.queue-hint{font-size:11px}.messages{padding:16px 12px}}
+
+/* Compact mobile composer: keep the keyboard-facing row quiet and shallow. */
+@media(max-width:600px){
+  .composer{margin:0;padding:4px 8px max(4px,env(safe-area-inset-bottom));border:0;border-top:1px solid #e2e4e7;border-radius:0;background:#f5f5f5;box-shadow:none}
+  .compose-toolbar{margin:0;min-height:48px;gap:8px}
+  .mode-tabs{background:transparent;padding:0;gap:8px}
+  .mode-tabs button{min-height:48px;border-radius:6px;padding:0 10px}
+  .mode-tabs button[aria-pressed=true]{background:#e8edf5;box-shadow:none}
+  .compose-input{gap:8px;align-items:center}
+  .composer textarea{min-height:44px;line-height:24px;padding:9px 10px;border:1px solid #e5e5e5;border-radius:6px;background:#fff;appearance:none;-webkit-appearance:none;box-shadow:none}
+  .composer textarea:focus,.composer textarea:focus-visible{outline:none;border-color:#aebbc8;box-shadow:none}
+  .compose-input .icon-button{width:48px;height:48px;min-height:48px;font-size:30px;border-radius:6px}
+  .compose-input .primary{min-height:48px;min-width:60px;padding:0 12px;border-radius:6px}
+  .queue-hint{margin:2px 4px 0;line-height:16px;font-size:11px}
+  /* Keep controls stationary between pointer-down and click, including IME focus changes. */
+}
