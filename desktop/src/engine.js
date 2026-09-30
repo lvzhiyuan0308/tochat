@@ -13,6 +13,10 @@ export class Engine {
     }
   }
   error(e){this.errors.push({time:Date.now(),message:e.message||String(e)});if(this.errors.length>10)this.errors.shift();}
+  setModel(llm){
+    this.llm=llm;
+    for(const [peer,connection] of this.connections)if(connection){try{this.send(peer,envelope('hello',{name:this.name,capabilities:llm?['chat','file','agent','llm']:['chat','file']}));}catch(e){this.error(e);}}
+  }
   refresh(){this.info=this.node.call({op:'info'});for(const f of this.info.friends){this.connections.set(f.peer,f.connection);this.store.peer(f.peer,f.name);}}
   connect(){this.lastBootstrap=Date.now();for(const n of this.bootstrap){try{this.node.call({op:'bootstrap',host:n.host,key:n.key,port:n.port});for(const port of n.tcpPorts||[])this.node.call({op:'bootstrap',host:n.host,key:n.key,port,tcp:true});}catch(e){this.error(e);}}}
   send(peer,p){for(const data of packets(p))this.node.call({op:'send',peer,data});}

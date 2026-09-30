@@ -8,6 +8,12 @@ import { Engine } from '../desktop/src/engine.js';
 import { envelope } from '../protocol/envelope.js';
 const peer='A'.repeat(64);
 class FakeNode {constructor(){this.sent=[];}call(c){if(c.op==='info')return {address:'id',connection:2,friends:[{peer,name:'Friend',connection:0}]};if(c.op==='send')this.sent.push(JSON.parse(c.data));return {ok:true};}poll(){return [];}close(){}}
+test('changing model configuration updates local status and announces capabilities to online peers',()=>{
+  const node=new FakeNode();const engine=new Engine(node,new Store(':memory:'),{name:'Test',downloads:'.'});
+  engine.connections.set(peer,2);engine.setModel({baseURL:'http://localhost/v1',model:'test',key:''});
+  assert.equal(engine.snapshot().aiConfigured,true);assert.ok(node.sent.at(-1).body.capabilities.includes('agent'));
+  engine.setModel(null);assert.equal(engine.snapshot().aiConfigured,false);assert.ok(!node.sent.at(-1).body.capabilities.includes('agent'));engine.close();
+});
 test('outbox survives restart and waits for an application ACK from the correct peer',()=>{
   const dir=mkdtempSync(path.join(tmpdir(),'tochat-test-'));let store=new Store(path.join(dir,'db'));let node=new FakeNode();let engine=new Engine(node,store,{name:'Test',downloads:dir});
   const {id}=engine.action({op:'chat',peer,text:'Offline hello'});assert.equal(store.get('SELECT status FROM messages').status,'queued');assert.equal(node.sent.length,0);engine.close();

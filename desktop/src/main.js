@@ -1,7 +1,7 @@
 import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { mkdirSync, readFileSync, createWriteStream, createReadStream, existsSync, writeFileSync, openSync, closeSync, unlinkSync } from 'node:fs';
+import { mkdirSync, readFileSync, createWriteStream, createReadStream, existsSync, writeFileSync, openSync, closeSync, unlinkSync, renameSync } from 'node:fs';
 import { randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 import { pipeline } from 'node:stream/promises';
 import { Transform } from 'node:stream';
@@ -9,6 +9,7 @@ import { ToxNode } from './tox-node.js';
 import { profileKey } from './profile-key.js';
 import { Store } from '../../shared/storage.js';
 import { Engine } from './engine.js';
+import { modelFromSaved, prepareModel, publicModel, protectSecret } from './model-settings.js';
 const root=fileURLToPath(new URL('../../',import.meta.url));
 const data=path.resolve(process.env.TOCHAT_DATA||path.join(root,'data/windows'));
 mkdirSync(data,{recursive:true});mkdirSync(path.join(data,'downloads'),{recursive:true});mkdirSync(path.join(data,'uploads'),{recursive:true});
@@ -22,7 +23,8 @@ const fd=openSync(lock,'wx');writeFileSync(fd,String(process.pid));closeSync(fd)
 process.once('exit',()=>{try{unlinkSync(lock);}catch{}});
 const configPath=path.join(data,'settings.json');const config=existsSync(configPath)?JSON.parse(readFileSync(configPath,'utf8')):{};
 const name=config.name||process.env.TOCHAT_NAME||'我的 Windows';
-const llm=process.env.LLM_BASE_URL?{baseURL:process.env.LLM_BASE_URL,key:process.env.LLM_API_KEY||'',model:process.env.LLM_MODEL||'local-model'}:null;
+const llm=config.llm?modelFromSaved(config.llm):process.env.LLM_BASE_URL?{baseURL:process.env.LLM_BASE_URL,key:process.env.LLM_API_KEY||'',model:process.env.LLM_MODEL||'local-model'}:null;
+function saveConfig(next){writeFileSync(configPath+'.tmp',JSON.stringify(next,null,2));renameSync(configPath+'.tmp',configPath);Object.assign(config,next);}
 const bootstrap=JSON.parse(readFileSync(path.join(root,'shared/bootstrap.json'),'utf8'));
 let engine;
 try{engine=new Engine(new ToxNode({profile:path.join(data,'identity.tox'),password:profileKey(path.join(data,'identity.key')),name,udp:process.env.TOCHAT_TCP_ONLY!=='1'}),new Store(path.join(data,'history.sqlite')),{name,downloads:path.join(data,'downloads'),llm,bootstrap});}
@@ -44,8 +46,15 @@ const server=http.createServer(async(req,res)=>{
     if(req.method==='POST'&&req.headers.origin!=='http://'+allowed)throw new Error('Invalid origin');
     if(url.pathname==='/api/action'&&req.method==='POST'){
       let raw='';for await(const chunk of req){raw+=chunk;if(Buffer.byteLength(raw)>100000)throw new Error('Request too large');}
-      const c=JSON.parse(raw);if(['sendFile'].includes(c.op))throw new Error('Use the file picker');const r=engine.action(c);
-      if(c.op==='name'){config.name=engine.name;writeFileSync(configPath,JSON.stringify(config,null,2));}
+      const c=JSON.parse(raw);if(['sendFile'].includes(c.op))throw new Error('Use the file picker');
+      let r;
+      if(c.op==='modelSettings')r=publicModel(config.llm,engine.llm);
+      else if(c.op==='saveModel'){
+        const previous=config.llm||{protectedKey:engine.llm?.key?protectSecret(engine.llm.key):''};
+        const saved=prepareModel(c,previous);const nextLLM=modelFromSaved(saved);
+        saveConfig({...config,llm:saved});engine.setModel(nextLLM);r=publicModel(saved,nextLLM);
+      }else r=engine.action(c);
+      if(c.op==='name')saveConfig({...config,name:engine.name});
       res.setHeader('Content-Type','application/json');res.end(JSON.stringify(r));return;
     }
     if(url.pathname==='/api/upload'&&req.method==='POST'){
