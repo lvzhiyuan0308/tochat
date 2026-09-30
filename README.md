@@ -1,8 +1,8 @@
-# ToChat 0.1
+# ToChat 1.1.0
 
 **P2P chat for people, devices and personal AI.**
 
-按 [分享方案](https://chatgpt.com/share/6abc623a-4dec-83ea-8fbc-010fa85de513) 实现的独立 Tox 原生 Windows / Android 应用。当前为可运行的 0.1 原型；Windows 本地和公共 TCP 中继已自动验收，Android APK 已构建，跨端真机网络矩阵待验收。
+按 [分享方案](https://chatgpt.com/share/6abc623a-4dec-83ea-8fbc-010fa85de513) 实现的独立 Tox 原生 Windows / Android 应用。当前版本为 1.1.0；Windows 本地和公共 TCP 中继已自动验收，Android APK 已构建，跨端真机网络矩阵待验收。
 
 ## 直接运行
 
@@ -10,11 +10,11 @@
 
 双击根目录 `Start-ToChat.cmd`。使用已有 Node 22；便携包则自带 Node。会打开本机聊天界面。终端持续运行即节点在线，关闭终端则离线。
 
-已打包 `dist/ToChat-0.1-windows.zip`，解压后双击其中的 `Start-ToChat.cmd`。无需安装 JDK、Android SDK 或 C/C++ 编译器。
+已打包 `dist/ToChat-1.1.0-windows.zip`，解压后双击其中的 `Start-ToChat.cmd`。无需安装 JDK、Android SDK 或 C/C++ 编译器。
 
 ### Android
 
-安装 `dist/android/ToChat-0.1-debug.apk`（签名 Debug 包，可直接安装，Android 8.0+，ARM64/x86_64）。`release-unsigned.apk` 是未签名发布产物，不能直接安装。
+安装 `dist/android/ToChat-1.1.0-debug.apk`（签名 Debug 包，可直接安装，Android 8.0+，ARM64/x86_64）。`release-unsigned.apk` 是未签名发布产物，不能直接安装。
 
 1. 两端点击“我的身份”，分享二维码或 Tox ID。
 2. 另一端点击“添加联系人”，粘贴 ID，或选择二维码图片读取。
@@ -39,6 +39,15 @@ $env:LLM_API_KEY = '<你的模型服务密钥>'
 Windows “联系人设置”中打开“允许此联系人使用我的本地 AI”。手机看到该设备的 AI 能力后，勾选“向此设备的 AI 提问”发送。默认不授权任何联系人。外部模型服务的费用和网络行为由你的模型服务决定。
 
 也可直接设置 `LLM_BASE_URL` / `LLM_MODEL` / `LLM_API_KEY` 后运行 `npm start`。未配置模型时只提供聊天/文件。
+
+## 会话与附件
+
+- 发送模式分为“聊天”和“AI 对话”。AI 上下文由提供模型的 Windows 节点保存，按联系人和会话隔离；普通聊天、失败和未完成回答不进入模型上下文。
+- 最近最多 20 轮完整问答在 48 KB UTF-8 总预算内保留；较早轮次保存最多 6 KB 的有损摘要摘录，可能省略细节。摘要不是无限长期记忆，也不保证保留所有历史事实。
+- “新对话”只改变后续 AI 提问的会话，不删除历史。应用升级前的问答属于默认会话，可以继续追问。
+- “停止生成”通过 Tox 发送停止请求，已生成内容保留。尚未发送的离线问题可直接取消排队；已经送达的问题在对方恢复在线后停止。新对话与远程停止需要对方升级到 1.1.0。
+- 附件随消息排列，点击卡片展开接收、保存、重发等操作。8 MB 以内的 PNG/JPEG/GIF/WebP 完成传输后可预览；不加载外部图片。取消/中断记录可移除并撤销，原文件不删除。接收方需让发送方重发，尚无断点续传。
+- AI 回答支持安全 Markdown、复制、回到最新消息。翻看历史时新消息不会强制滚回底部。手机输入框按内容增高，Enter 换行；桌面 Enter 发送、Shift+Enter 换行。
 
 ## 数据与配置
 

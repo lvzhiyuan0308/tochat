@@ -1,11 +1,13 @@
 import { randomUUID } from 'node:crypto';
 export const MAX_BODY_BYTES = 65536;
-export const TYPES = new Set(['chat','ack','hello','agent.request','stream.begin','stream.chunk','stream.end','stream.error']);
+export const TYPES = new Set(['chat','ack','hello','agent.request','agent.cancel','stream.begin','stream.chunk','stream.end','stream.error']);
 export function envelope(t, body, id = randomUUID()) { return {v:1,id,t,ts:Date.now(),body}; }
 export function validate(p) {
   if (!p || p.v !== 1 || !TYPES.has(p.t) || typeof p.id !== 'string' || p.id.length > 80 || !p.id || !Number.isSafeInteger(p.ts) || !p.body || typeof p.body !== 'object' || Array.isArray(p.body)) throw new Error('Invalid ToChat envelope');
   const b=p.body;
   if ((p.t==='chat'||p.t==='agent.request') && (typeof b.text!=='string'||!b.text.trim()||Buffer.byteLength(b.text)>16384)) throw new Error('Message must contain 1–16384 bytes');
+  if(p.t==='agent.request'&&b.session!==undefined&&(typeof b.session!=='string'||!/^[A-Za-z0-9-]{1,80}$/.test(b.session)))throw new Error('Invalid AI session');
+  if(p.t==='agent.cancel'&&(typeof b.stream!=='string'||!b.stream||b.stream.length>80))throw new Error('Invalid cancellation');
   if(p.t==='ack' && (typeof b.id!=='string'||b.id.length>80))throw new Error('Invalid ACK');
   if(p.t.startsWith('stream.') && (typeof b.stream!=='string'||b.stream.length>80))throw new Error('Invalid stream');
   if(p.t==='stream.chunk' && (!Number.isSafeInteger(b.seq)||b.seq<0||b.seq>8192||typeof b.text!=='string'||Buffer.byteLength(b.text)>4096))throw new Error('Invalid stream chunk');

@@ -31,7 +31,11 @@ class MainActivity : Activity() {
         web.webViewClient=object:WebViewClient(){
             override fun shouldInterceptRequest(view:WebView,request:WebResourceRequest):WebResourceResponse {
                 val u=request.url;val p=if(u.path=="/")"index.html" else u.path?.removePrefix("/")?:""
-                if(u.scheme!="https"||u.host!="tochat.local"||p !in listOf("index.html","style.css","app.js","qrcode.js","jsQR.js"))return WebResourceResponse("text/plain","UTF-8",403,"Forbidden",emptyMap(),"Blocked".byteInputStream())
+                if(u.scheme=="https"&&u.host=="tochat.local"&&p=="preview"){
+                    try{val t=(ToxService.runtime?:error("节点未启动")).request(JSONObject().put("op","filePreview").put("id",u.getQueryParameter("id")?:"").put("peer",u.getQueryParameter("peer")?:""));return WebResourceResponse(t.getString("mime"),null,200,"OK",mapOf("Cache-Control" to "no-store","X-Content-Type-Options" to "nosniff"),File(t.getString("path")).inputStream())}
+                    catch(_:Exception){return WebResourceResponse("text/plain","UTF-8",404,"Not Found",emptyMap(),"No preview".byteInputStream())}
+                }
+                if(u.scheme!="https"||u.host!="tochat.local"||p !in listOf("index.html","style.css","app.js","markdown.js","qrcode.js","jsQR.js"))return WebResourceResponse("text/plain","UTF-8",403,"Forbidden",emptyMap(),"Blocked".byteInputStream())
                 val type=if(p.endsWith(".html"))"text/html" else if(p.endsWith(".css"))"text/css" else "application/javascript"
                 return WebResourceResponse(type,"UTF-8",200,"OK",mapOf("Cache-Control" to "no-store","Content-Security-Policy" to "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'"),assets.open(p))
             }

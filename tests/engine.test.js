@@ -31,3 +31,9 @@ test('reassembles AI chunks arriving after the end marker and rejects unsolicite
 test('AI is denied until a friend is explicitly authorized',async()=>{
   const store=new Store(':memory:');const engine=new Engine(new FakeNode(),store,{name:'Test',downloads:'.',llm:{baseURL:'http://127.0.0.1:1',model:'test'}});const p=envelope('agent.request',{text:'hello'});engine.receive(peer,p);await new Promise(r=>setImmediate(r));const out=store.all('SELECT packet FROM outbox').map(r=>JSON.parse(r.packet));assert.equal(out.length,1);assert.equal(out[0].t,'stream.error');assert.match(out[0].body.text,/尚未授权/);engine.close();
 });
+test('failed transfer records may be hidden and restored without deleting source files or active transfers',()=>{
+  const s=new Store(':memory:'),e=new Engine(new FakeNode(),s,{name:'Test',downloads:'.'});
+  s.run('INSERT INTO transfers(id,peer,number,name,size,inbound,status,path) VALUES(?,?,?,?,?,?,?,?)','file',peer,0,'keep.bin',5,1,'interrupted','keep.bin');
+  e.action({op:'hideTransfer',peer,id:'file'});assert.equal(e.snapshot(peer).transfers.length,0);assert.equal(s.get('SELECT path FROM transfers').path,'keep.bin');e.action({op:'restoreTransfer',peer,id:'file'});assert.equal(e.snapshot(peer).transfers.length,1);
+  s.run("UPDATE transfers SET status='transferring'");assert.throws(()=>e.action({op:'hideTransfer',peer,id:'file'}));assert.throws(()=>e.action({op:'restoreTransfer',peer:'other',id:'file'}));e.close();
+});

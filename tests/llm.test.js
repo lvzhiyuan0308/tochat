@@ -2,6 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { completion } from '../desktop/src/llm.js';
+test('forwards supplied multi-turn history to the model without replacing it with a single question',async()=>{
+  const history=[{role:'system',content:'助手'},{role:'user',content:'介绍北京'},{role:'assistant',content:'北京是首都'},{role:'user',content:'刚才是哪个城市'}];let received;
+  const server=http.createServer(async(req,res)=>{let raw='';for await(const c of req)raw+=c;received=JSON.parse(raw);res.writeHead(200,{'Content-Type':'text/event-stream'});res.end('data: [DONE]\n\n');});await new Promise(r=>server.listen(0,'127.0.0.1',r));
+  try{for await(const delta of completion({baseURL:`http://127.0.0.1:${server.address().port}/v1`,model:'fixture',messages:history})){}assert.deepEqual(received.messages,history);}finally{server.close();}
+});
 test('OpenAI-compatible SSE decodes UTF-8 across TCP chunks',async()=>{
   const server=http.createServer((req,res)=>{assert.equal(req.url,'/v1/chat/completions');res.writeHead(200,{'Content-Type':'text/event-stream'});const data=Buffer.from('data: {"choices":[{"delta":{"content":"你好🙂"}}]}\r\n\r\ndata: [DONE]\n\n');for(const byte of data)res.write(Buffer.from([byte]));res.end();});await new Promise(r=>server.listen(0,'127.0.0.1',r));
   try{let text='';for await(const delta of completion({baseURL:`http://127.0.0.1:${server.address().port}/v1`,model:'test',text:'hi'}))text+=delta;assert.equal(text,'你好🙂');}finally{server.close();}

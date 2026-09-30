@@ -1,6 +1,7 @@
 param([string]$BaseToolchain = 'C:\Users\lvzhiyuan\WorkBuddy\2026-09-06-18-01-12\gmmff-chat\toolchain')
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path $PSScriptRoot -Parent
+$packageVersion = (Get-Content -LiteralPath "$projectRoot\package.json" -Raw | ConvertFrom-Json).version
 $env:JAVA_HOME = "$BaseToolchain\jdk-17.0.20.1+1"
 $env:ANDROID_HOME = "$BaseToolchain\sdk"
 $env:ANDROID_SDK_ROOT = $env:ANDROID_HOME
@@ -20,5 +21,5 @@ try {
   if ($LASTEXITCODE) { throw 'Android build failed' }
 } finally { Pop-Location }
 New-Item -ItemType Directory -Force "$projectRoot\dist\android" | Out-Null
-Copy-Item -LiteralPath "$projectRoot\mobile\android\app\build\outputs\apk\debug\app-debug.apk" -Destination "$projectRoot\dist\android\ToChat-0.1-debug.apk"
-Copy-Item -LiteralPath "$projectRoot\mobile\android\app\build\outputs\apk\release\app-release-unsigned.apk" -Destination "$projectRoot\dist\android\ToChat-0.1-release-unsigned.apk"
+Copy-Item -LiteralPath "$projectRoot\mobile\android\app\build\outputs\apk\debug\app-debug.apk" -Destination "$projectRoot\dist\android\ToChat-$packageVersion-debug.apk"
+Copy-Item -LiteralPath "$projectRoot\mobile\android\app\build\outputs\apk\release\app-release-unsigned.apk" -Destination "$projectRoot\dist\android\ToChat-$packageVersion-release-unsigned.apk"

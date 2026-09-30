@@ -3,12 +3,14 @@ import android.util.Base64
 import org.json.JSONObject
 import java.util.UUID
 object Protocol {
-    val types = setOf("chat","ack","hello","agent.request","stream.begin","stream.chunk","stream.end","stream.error")
+    val types = setOf("chat","ack","hello","agent.request","agent.cancel","stream.begin","stream.chunk","stream.end","stream.error")
     fun envelope(t: String, b: JSONObject, id: String = UUID.randomUUID().toString()) = JSONObject().put("v",1).put("id",id).put("t",t).put("ts",System.currentTimeMillis()).put("body",b)
     fun validate(p: JSONObject): JSONObject {
         check(p.getInt("v")==1 && p.getString("t") in types && p.getString("id").length in 1..80) { "Invalid envelope" }
         p.getLong("ts"); val b=p.getJSONObject("body"); val t=p.getString("t")
         if(t=="chat"||t=="agent.request")check(b.getString("text").isNotBlank() && b.getString("text").toByteArray().size<=16384){"消息需在 1–16384 字节内"}
+        if(t=="agent.request"&&b.has("session"))check(b.getString("session").matches(Regex("[A-Za-z0-9-]{1,80}"))){"Invalid session"}
+        if(t=="agent.cancel")check(b.getString("stream").length in 1..80)
         if(t=="ack")check(b.getString("id").length in 1..80)
         if(t.startsWith("stream."))check(b.getString("stream").length in 1..80)
         if(t=="stream.chunk")check(b.getInt("seq") in 0..8192 && b.getString("text").toByteArray().size<=4096)

@@ -1,8 +1,8 @@
-export async function* completion({baseURL,key,model,text,signal}) {
+export async function* completion({baseURL,key,model,text,messages,signal}) {
   const url=new URL(baseURL);if(!['http:','https:'].includes(url.protocol))throw new Error('Invalid LLM URL');
   const response=await fetch(url.href.replace(/\/$/,'')+'/chat/completions',{
     method:'POST',headers:{'Content-Type':'application/json',...(key?{Authorization:'Bearer '+key}:{})},
-    body:JSON.stringify({model,stream:true,messages:[{role:'system',content:'你是 ToChat 的个人 AI 助手，请用用户使用的语言回答。'},{role:'user',content:text}]}),signal
+    body:JSON.stringify({model,stream:true,messages:messages||[{role:'system',content:'你是 ToChat 的个人 AI 助手，请用用户使用的语言回答。'},{role:'user',content:text}]}),signal
   });
   if(!response.ok)throw new Error('模型服务返回 HTTP '+response.status);if(!response.body)throw new Error('模型没有返回流');
   const decoder=new TextDecoder();let pending='',done=false,surrogate='';

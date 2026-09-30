@@ -11,6 +11,7 @@ import { Store } from '../../shared/storage.js';
 import { Engine } from './engine.js';
 import { modelFromSaved, prepareModel, publicModel, protectSecret } from './model-settings.js';
 import { createFileSaver } from './save-file.js';
+import { imageMime } from './file-preview.js';
 const root=fileURLToPath(new URL('../../',import.meta.url));
 const data=path.resolve(process.env.TOCHAT_DATA||path.join(root,'data/windows'));
 mkdirSync(data,{recursive:true});mkdirSync(path.join(data,'downloads'),{recursive:true});mkdirSync(path.join(data,'uploads'),{recursive:true});
@@ -67,19 +68,24 @@ const server=http.createServer(async(req,res)=>{
       await pipeline(req,limit,createWriteStream(dest,{flags:'wx'}));const r=engine.action({op:'sendFile',peer,path:dest,name});res.setHeader('Content-Type','application/json');res.end(JSON.stringify(r));return;
     }
     if(req.method!=='GET'){res.writeHead(405);res.end();return;}
+    if(url.pathname==='/api/preview'){
+      const t=engine.store.get("SELECT * FROM transfers WHERE id=? AND peer=? AND status='complete'",url.searchParams.get('id'),url.searchParams.get('peer'));
+      if(!t)throw new Error('图片尚未接收完成');
+      res.setHeader('Content-Type',await imageMime(t.path));await pipeline(createReadStream(t.path),res);return;
+    }
     if(url.pathname==='/api/download'){
       const t=engine.store.get("SELECT * FROM transfers WHERE id=? AND peer=? AND inbound=1 AND status='complete'",url.searchParams.get('id'),url.searchParams.get('peer'));
       if(!t||!existsSync(t.path))throw new Error('文件不存在');
       res.setHeader('Content-Type','application/octet-stream');res.setHeader('Content-Disposition',"attachment; filename*=UTF-8''"+encodeURIComponent(t.name));await pipeline(createReadStream(t.path),res);return;
     }
-    const files={'/':'index.html','/app.js':'app.js','/style.css':'style.css','/qrcode.js':'qrcode.js','/jsQR.js':'jsQR.js'};
+    const files={'/':'index.html','/app.js':'app.js','/markdown.js':'markdown.js','/style.css':'style.css','/qrcode.js':'qrcode.js','/jsQR.js':'jsQR.js'};
     if(!files[url.pathname]){res.writeHead(404);res.end();return;}
     const filename=path.join(root,'desktop/ui',files[url.pathname]);res.setHeader('Content-Type',types[path.extname(filename)]||'application/octet-stream');res.end(readFileSync(filename));
   }catch(e){if(res.headersSent)res.destroy();else{res.writeHead(400,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify({error:e.message}));}}
 });
 server.listen(Number(process.env.TOCHAT_PORT||8788),'127.0.0.1',()=>{
   const url=`http://127.0.0.1:${server.address().port}/?token=${token}`;
-  console.log('ToChat 0.1 已启动，聊天通过 Tox 对等网络传输。');console.log('打开界面：'+url);console.log('数据目录：'+data);
+  console.log('ToChat '+JSON.parse(readFileSync(path.join(root,'package.json'),'utf8')).version+' 已启动，聊天通过 Tox 对等网络传输。');console.log('打开界面：'+url);console.log('数据目录：'+data);
   writeFileSync(path.join(data,'launcher.url'),'[InternetShortcut]\r\nURL='+url+'\r\n');
   if(process.env.TOCHAT_OPEN==='1')import('node:child_process').then(({spawn})=>spawn('rundll32.exe',['url.dll,FileProtocolHandler',url],{windowsHide:true,stdio:'ignore'}));
 });
